@@ -284,10 +284,23 @@ class MiniSearch {
     return allResults.slice(start, start + limit);
   }
 
+  /**
+   * Dumps the index to a JSON string.
+   *
+   * Useful for persisting an already-built index.
+   * @return {string}
+   */
   toJson() {
     return JSON.stringify(this.index);
   }
 
+  /**
+   * Loads the index from a JSON string.
+   *
+   * This *clears* the index first!
+   * @param {string} indexData - The JSON of a previously-built index.
+   * @return {undefined}
+   */
   fromJson(indexData) {
     this.clear();
     this.index = JSON.parse(indexData);
