@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Test MiniSearch</title>
+        <script type="text/javascript">
+            window.addEventListener("load", (ev) => {
+                import('./src/index.js')
+                    .then((module) => {
+                        window.engine = engine = new module.MiniSearch();
+
+                        engine.add("abc", "The dog is a 'hot dog'.");
+                        engine.add("def", "Dogs > Cats");
+                        engine.add("ghi", "the quick brown fox jumps over the lazy dog");
+                        engine.add("jkl", "Am I lazy, or just work smart?");
+
+                        // Then, you can let the user search on the engine...
+                        console.log(engine.search("my dog"));
+                        // ...including limiting results (to just one)...
+                        console.log(engine.search("lazy", 1));
+                        // ...or a second page of ten results!
+                        console.log(engine.search("dogs", 10, 2));
+                    });
+            });
+        </script>
+    </head>
+
+    <body>
+        <h1>Test Mini Search</h1>
+
+        <ol>
+            <li>
+                Run me via `python3 -m http.server 8888`.
+            </li>
+            <li>
+                Open <a href="http://localhost:8888/">http://localhost:8888/</a>
+                in your browser.
+            </li>
+            <li>
+                Open the Javascript console.
+            </li>
+            <li>
+                The engine has a small index built & is available
+                via <code>`window.engine`</code>.
+            </li>
+        </ul>
+    </body>
+</html>

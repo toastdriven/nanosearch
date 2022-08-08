@@ -6,8 +6,17 @@
  * @module minisearch
  */
 
+const VERSION = "1.0.0";
+
+class TermPosition {
+  constructor(term, position) {
+    this.term = term;
+    this.position = position;
+  }
+}
+
 /**
- * A basic, English-based preprocessor.
+ * A basic preprocessor.
  *
  * Takes a document of text & generates a list of words.
  *
@@ -16,27 +25,87 @@
  * - strips out non-alphanumeric symbols
  * - splits on whitespace
  */
-class BasicEnglishPreprocessor {
+class BasicPreprocessor {
+  constructor(splitOn, skipWords, punctuation) {
+    this.splitOn = splitOn || /\s/;
+    this.skipWords = skipWords || [];
+    this.punctuation = punctuation || /[~`!@#$%^&*\(\)_+=\[\]\{\}\\\|;:'",\.\/<>?-]/g;
+  }
+
+  clean(word) {
+    // Dupe it so that we don't modify the original.
+    let cleaned = word.slice();
+    cleaned = cleaned.replaceAll(this.punctuation, "");
+    return cleaned;
+  }
+
+  appendTerm(terms, currentWord, wordOffset) {
+    // We've encountered the end of the word. Finalize the term.
+    const cleaned = this.clean(currentWord.toLowerCase());
+
+    if (cleaned.length > 0) {
+      // Check the skip word list.
+      if (this.skipWords.indexOf(cleaned) < 0) {
+        // It's not a skip word. Add it to terms.
+        const term = new TermPosition(cleaned, wordOffset);
+        terms.push(term);
+      }
+    }
+
+    return terms;
+  }
+
   /**
-   * Processes a document into a list of words.
+   * Processes a document into a list of terms (`TermPosition` objects).
    * @param {string} doc - The text to preprocess for the engine.
    * @return {array}
    */
   process(doc) {
-    // This is really naive, but for the purposes of being simple/fast, it'll
-    // have to do for now.
-    const splitOn = /\s+/;
-    const toStrip = /[^A-Za-z0-9\s]/g;
+    const docLength = doc.length;
+    const terms = [];
+    let char = null,
+      wordOffset = null,
+      currentWord = "",
+      cleaned = "";
 
-    // TODO: Eventually, Unicode support would be cool.
-    // const toStrip = /([\u0000-\u0019\u0021-\uFFFF])+/gu;
+    // Iterate over the whole document, character by character.
+    // `.split()` would be faster, but we would lose term positions, plus
+    // needing to copy the document.
+    for (let offset = 0; offset < docLength; offset++) {
+      char = doc[offset];
 
-    // Copy it, so that we don't risk modifying the original on someone.
-    let cleaned = doc.toString().slice();
+      // Check if it's a non-whitespace character.
+      if (!this.splitOn.test(char)) {
+        // Check to see if we have an active word offset.
+        if (wordOffset === null) {
+          // We don't have an active word. Store the offset.
+          wordOffset = offset;
+        }
 
-    cleaned = cleaned.toLowerCase();
-    cleaned = cleaned.replaceAll(toStrip, '');
-    return cleaned.split(splitOn);
+        // Then append the character & move on.
+        currentWord += char;
+        continue;
+      }
+
+      // It's a whitespace character.
+      // We now need to figure out if we have an in-progress term...
+      if (currentWord.length > 0) {
+        this.appendTerm(terms, currentWord, wordOffset);
+
+        // Reset our variables.
+        currentWord = "";
+        wordOffset = null;
+        // All done, next character please!
+        continue;
+      }
+    }
+
+    // If we didn't hit trailing whitespace, we need to finalize the last term.
+    if (currentWord.length > 0) {
+      this.appendTerm(terms, currentWord, wordOffset);
+    }
+
+    return terms;
   }
 }
 
@@ -96,17 +165,18 @@ class MiniSearch {
    * @param {object} existingIndex - The existing index or `undefined` (fresh
    *   index).
    * @param {object} preprocessor - The preprocessor or `undefined`
-   *   (`BasicEnglishPreprocessor`).
+   *   (`BasicPreprocessor`).
    * @param {object} tokenizer - The tokenizer or `undefined`
    *   (`NGramTokenizer`).
    * @return {this}
    */
   constructor(existingIndex, preprocessor, tokenizer) {
     this.index = existingIndex || {
+      "version": VERSION,
       "documentIds": {},
       "terms": {},
     };
-    this.preprocessor = preprocessor || new BasicEnglishPreprocessor();
+    this.preprocessor = preprocessor || new BasicPreprocessor();
     this.tokenizer = tokenizer || new NGramTokenizer();
   }
 
@@ -116,6 +186,7 @@ class MiniSearch {
    */
   clear() {
     this.index = {
+      "version": VERSION,
       "documentIds": {},
       "terms": {},
     };
@@ -129,10 +200,10 @@ class MiniSearch {
    */
   add(docId, doc) {
     const alreadyIndexed = this.index["documentIds"].hasOwnProperty(docId);
-    const words = this.preprocessor.process(doc);
+    const terms = this.preprocessor.process(doc);
 
-    for (let word of words) {
-      let tokens = this.tokenizer.tokenize(word);
+    for (let termPos of terms) {
+      let tokens = this.tokenizer.tokenize(termPos.term);
 
       for (let token of tokens) {
         // Check if the token is already present. If not, set to an empty object.
@@ -146,11 +217,11 @@ class MiniSearch {
           (!this.index["terms"][token].hasOwnProperty(docId))
           || (alreadyIndexed)
         ) {
-          this.index["terms"][token][docId] = 0;
+          this.index["terms"][token][docId] = [];
         }
 
-        // Increment the token count for the document.
-        this.index["terms"][token][docId]++;
+        // Store the term position of the token.
+        this.index["terms"][token][docId].push(termPos.position);
       }
     }
 
@@ -195,15 +266,15 @@ class MiniSearch {
   _search(query) {
     const initialResults = {};
     const rawResults = [];
-    const queryWords = this.preprocessor.process(query);
+    const queryTerms = this.preprocessor.process(query);
 
-    for (let word of queryWords) {
-      const queryTokens = this.tokenizer.tokenize(word);
+    for (let termPos of queryTerms) {
+      const queryTokens = this.tokenizer.tokenize(termPos.term);
 
       for (let token of queryTokens) {
         if (this.index["terms"].hasOwnProperty(token)) {
           // We've got a hit!
-          for (const [docId, count] of Object.entries(this.index["terms"][token])) {
+          for (const [docId, positions] of Object.entries(this.index["terms"][token])) {
             // Check if we've already seen the document. Initialize a result
             // if not.
             if (!initialResults.hasOwnProperty(docId)) {
@@ -218,7 +289,8 @@ class MiniSearch {
               initialResults[docId]["terms"][token] = 0;
             }
 
-            initialResults[docId]["terms"][token] += count;
+            // FIXME: We're still using a count here, when we can do better.
+            initialResults[docId]["terms"][token] += positions.length;
           }
         }
       }
@@ -302,13 +374,29 @@ class MiniSearch {
    * @return {undefined}
    */
   fromJson(indexData) {
+    const loadedData = JSON.parse(indexData);
+
+    if (!loadedData.hasOwnProperty("version")) {
+      throw new Error("Index data has no version information! Aborting load.");
+    }
+
+    // Do a basic version check.
+    const ourVersion = VERSION.split(".", 1);
+    const loadedVersion = loadedData["version"].split(".", 1);
+
+    if (ourVersion !== loadedVersion) {
+      throw new Error("Index major version doesn't match! Aborting load.");
+    }
+
     this.clear();
-    this.index = JSON.parse(indexData);
+    this.index = loadedData;
   }
 }
 
 export {
-  BasicEnglishPreprocessor,
+  VERSION,
+  TermPosition,
+  BasicPreprocessor,
   NGramTokenizer,
   MiniSearch,
 };
