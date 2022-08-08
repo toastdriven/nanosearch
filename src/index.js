@@ -37,9 +37,9 @@ class TermPosition {
  * - splits on whitespace
  */
 class BasicPreprocessor {
-  constructor(splitOn, skipWords, punctuation) {
+  constructor(splitOn, stopWords, punctuation) {
     this.splitOn = splitOn || /\s/;
-    this.skipWords = skipWords || [];
+    this.stopWords = stopWords || [];
     this.punctuation = punctuation || /[~`!@#$%^&*\(\)_+=\[\]\{\}\\\|;:'",\.\/<>?-]/g;
   }
 
@@ -75,9 +75,9 @@ class BasicPreprocessor {
     const cleaned = this.clean(currentWord.toLowerCase());
 
     if (cleaned.length > 0) {
-      // Check the skip word list.
-      if (this.skipWords.indexOf(cleaned) < 0) {
-        // It's not a skip word. Add it to terms.
+      // Check the stop word list.
+      if (this.stopWords.indexOf(cleaned) < 0) {
+        // It's not a stop word. Add it to terms.
         const term = new TermPosition(cleaned, wordOffset);
         // I don't love that we're modifying the passed array in-place, but
         // we also don't want O(N) copies of the `terms` per-document.
