@@ -8,7 +8,18 @@
 
 const VERSION = "1.0.0";
 
+/**
+ * A term position.
+ *
+ * Essentially a struct, this takes a term (word) & a position within a document.
+ */
 class TermPosition {
+  /**
+   * Creates a new term position.
+   * @param {string} term - The term/word to store.
+   * @param {int} position - The position within the document.
+   * @return {this}
+   */
   constructor(term, position) {
     this.term = term;
     this.position = position;
@@ -32,6 +43,13 @@ class BasicPreprocessor {
     this.punctuation = punctuation || /[~`!@#$%^&*\(\)_+=\[\]\{\}\\\|;:'",\.\/<>?-]/g;
   }
 
+  /**
+   * Cleans a word.
+   *
+   * Currently, this is just stripping out basic punctuation characters.
+   * @param {string} word - The word to be cleaned.
+   * @return {string}
+   */
   clean(word) {
     // Dupe it so that we don't modify the original.
     let cleaned = word.slice();
@@ -39,6 +57,19 @@ class BasicPreprocessor {
     return cleaned;
   }
 
+  /**
+   * Potentially appends a new term to the terms list.
+   *
+   * This is largely an _internal_ method.
+   *
+   * This lowercases, then cleans the word. If there are any characters left
+   * post-cleaning, it will create a new `TermPosition`, and append it to
+   * the `terms` list **IN-PLACE**.
+   * @param {array} terms - The existing term list.
+   * @param {string} currentWord - The word to added.
+   * @param {int} wordOffset - The offset of the word within the document.
+   * @return {array}
+   */
   appendTerm(terms, currentWord, wordOffset) {
     // We've encountered the end of the word. Finalize the term.
     const cleaned = this.clean(currentWord.toLowerCase());
@@ -48,6 +79,9 @@ class BasicPreprocessor {
       if (this.skipWords.indexOf(cleaned) < 0) {
         // It's not a skip word. Add it to terms.
         const term = new TermPosition(cleaned, wordOffset);
+        // I don't love that we're modifying the passed array in-place, but
+        // we also don't want O(N) copies of the `terms` per-document.
+        // That's a lot of RAM & allocations on big documents.
         terms.push(term);
       }
     }
