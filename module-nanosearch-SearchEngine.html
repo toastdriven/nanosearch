@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Class: MiniSearch</title>
+    <title>JSDoc: Class: SearchEngine</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Class: MiniSearch</h1>
+    <h1 class="page-title">Class: SearchEngine</h1>
 
     
 
@@ -29,13 +29,13 @@
 <header>
     
         <h2><span class="attribs"><span class="type-signature"></span></span>
-            <span class="ancestors"><a href="module-minisearch.html">minisearch</a>~</span>MiniSearch<span class="signature">(existingIndex, preprocessor, tokenizer)</span><span class="type-signature"> &rarr; {this}</span></h2>
+            <span class="ancestors"><a href="module-nanosearch.html">nanosearch</a>~</span>SearchEngine<span class="signature">(existingIndex, preprocessor, tokenizer)</span><span class="type-signature"> &rarr; {this}</span></h2>
         
-            <div class="class-description">A mini search engine.
+            <div class="class-description">A tiny search engine.
 
 Usage:
 
-  const engine = new MiniSearch();
+  const engine = new SearchEngine();
 
   // Add some documents. Call for each document you need to index.
   engine.add(uniqueDocumentId, documentText);
@@ -56,7 +56,7 @@ Usage:
     
 
     
-    <h4 class="name" id="MiniSearch"><span class="type-signature"></span>new MiniSearch<span class="signature">(existingIndex, preprocessor, tokenizer)</span><span class="type-signature"> &rarr; {this}</span></h4>
+    <h4 class="name" id="SearchEngine"><span class="type-signature"></span>new SearchEngine<span class="signature">(existingIndex, preprocessor, tokenizer)</span><span class="type-signature"> &rarr; {this}</span></h4>
     
 
     
@@ -141,7 +141,7 @@ Usage:
             
 
             <td class="description last">The preprocessor or `undefined`
-  (`BasicEnglishPreprocessor`).</td>
+  (`BasicPreprocessor`).</td>
         </tr>
 
     
@@ -206,7 +206,7 @@ Usage:
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line93">line 93</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line206">line 206</a>
     </li></ul></dd>
     
 
@@ -404,7 +404,7 @@ Usage:
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line130">line 130</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line245">line 245</a>
     </li></ul></dd>
     
 
@@ -510,7 +510,7 @@ Usage:
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line117">line 117</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line231">line 231</a>
     </li></ul></dd>
     
 
@@ -667,7 +667,7 @@ This *clears* the index first!
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line304">line 304</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line420">line 420</a>
     </li></ul></dd>
     
 
@@ -826,7 +826,7 @@ WARNING: Depending on the size of your index, this may take a LONG time.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line172">line 172</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line287">line 287</a>
     </li></ul></dd>
     
 
@@ -984,7 +984,7 @@ needed/have a better way to score.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line248">line 248</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line364">line 364</a>
     </li></ul></dd>
     
 
@@ -1185,7 +1185,7 @@ needed/have a better way to score.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line267">line 267</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line383">line 383</a>
     </li></ul></dd>
     
 
@@ -1293,7 +1293,7 @@ Useful for persisting an already-built index.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="index.js.html">index.js</a>, <a href="index.js.html#line293">line 293</a>
+        <a href="index.js.html">index.js</a>, <a href="index.js.html#line409">line 409</a>
     </li></ul></dd>
     
 
@@ -1357,13 +1357,13 @@ Useful for persisting an already-built index.
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-minisearch.html">minisearch</a></li></ul><h3>Classes</h3><ul><li><a href="module-minisearch-BasicEnglishPreprocessor.html">BasicEnglishPreprocessor</a></li><li><a href="module-minisearch-MiniSearch.html">MiniSearch</a></li><li><a href="module-minisearch-NGramTokenizer.html">NGramTokenizer</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-nanosearch.html">nanosearch</a></li></ul><h3>Classes</h3><ul><li><a href="module-nanosearch-BasicPreprocessor.html">BasicPreprocessor</a></li><li><a href="module-nanosearch-NGramTokenizer.html">NGramTokenizer</a></li><li><a href="module-nanosearch-SearchEngine.html">SearchEngine</a></li><li><a href="module-nanosearch-TermPosition.html">TermPosition</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Tue Jul 26 2022 07:47:56 GMT-0500 (Central Daylight Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Mon Aug 08 2022 20:07:42 GMT-0500 (Central Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>

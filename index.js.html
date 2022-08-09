@@ -27,15 +27,35 @@
     <section>
         <article>
             <pre class="prettyprint source linenums"><code>/**
- * minisearch: A tiny search engine.
+ * nanosearch: A tiny search engine.
  *
  * Default implementation is based off of n-grams (default size: `3`).
  *
- * @module minisearch
+ * @module nanosearch
  */
 
+const VERSION = "1.0.0";
+
 /**
- * A basic, English-based preprocessor.
+ * A term position.
+ *
+ * Essentially a struct, this takes a term (word) &amp; a position within a document.
+ */
+class TermPosition {
+  /**
+   * Creates a new term position.
+   * @param {string} term - The term/word to store.
+   * @param {int} position - The position within the document.
+   * @return {this}
+   */
+  constructor(term, position) {
+    this.term = term;
+    this.position = position;
+  }
+}
+
+/**
+ * A basic preprocessor.
  *
  * Takes a document of text &amp; generates a list of words.
  *
@@ -44,27 +64,120 @@
  * - strips out non-alphanumeric symbols
  * - splits on whitespace
  */
-class BasicEnglishPreprocessor {
+class BasicPreprocessor {
   /**
-   * Processes a document into a list of words.
+   * Creates a new basic preprocessor.
+   * @param {RegExp} splitOn - What to split terms on. Default is any
+   *   whitespace.
+   * @param {array} stopWords - A list of common words to be skipped. Default is
+   *   `[]`.
+   * @param {RegExp} punctuation - Any punctuation to be removed. Default is all
+   *   common symbols on an English QWERTY keyboard.
+   * @return {this}
+   */
+  constructor(splitOn, stopWords, punctuation) {
+    this.splitOn = splitOn || /\s/;
+    this.stopWords = stopWords || [];
+    this.punctuation = punctuation || /[~`!@#$%^&amp;*\(\)_+=\[\]\{\}\\\|;:'",\.\/&lt;>?-]/g;
+  }
+
+  /**
+   * Cleans a word.
+   *
+   * Currently, this is just stripping out basic punctuation characters.
+   * @param {string} word - The word to be cleaned.
+   * @return {string}
+   */
+  clean(word) {
+    // Dupe it so that we don't modify the original.
+    let cleaned = word.slice();
+    cleaned = cleaned.replaceAll(this.punctuation, "");
+    return cleaned;
+  }
+
+  /**
+   * Potentially appends a new term to the terms list.
+   *
+   * This is largely an _internal_ method.
+   *
+   * This lowercases, then cleans the word. If there are any characters left
+   * post-cleaning, it will create a new `TermPosition`, and append it to
+   * the `terms` list **IN-PLACE**.
+   * @param {array} terms - The existing term list.
+   * @param {string} currentWord - The word to added.
+   * @param {int} wordOffset - The offset of the word within the document.
+   * @return {array}
+   */
+  appendTerm(terms, currentWord, wordOffset) {
+    // We've encountered the end of the word. Finalize the term.
+    const cleaned = this.clean(currentWord.toLowerCase());
+
+    if (cleaned.length > 0) {
+      // Check the stop word list.
+      if (this.stopWords.indexOf(cleaned) &lt; 0) {
+        // It's not a stop word. Add it to terms.
+        const term = new TermPosition(cleaned, wordOffset);
+        // I don't love that we're modifying the passed array in-place, but
+        // we also don't want O(N) copies of the `terms` per-document.
+        // That's a lot of RAM &amp; allocations on big documents.
+        terms.push(term);
+      }
+    }
+
+    return terms;
+  }
+
+  /**
+   * Processes a document into a list of terms (`TermPosition` objects).
    * @param {string} doc - The text to preprocess for the engine.
    * @return {array}
    */
   process(doc) {
-    // This is really naive, but for the purposes of being simple/fast, it'll
-    // have to do for now.
-    const splitOn = /\s+/;
-    const toStrip = /[^A-Za-z0-9\s]/g;
+    const docLength = doc.length;
+    const terms = [];
+    let char = null,
+      wordOffset = null,
+      currentWord = "",
+      cleaned = "";
 
-    // TODO: Eventually, Unicode support would be cool.
-    // const toStrip = /([\u0000-\u0019\u0021-\uFFFF])+/gu;
+    // Iterate over the whole document, character by character.
+    // `.split()` would be faster, but we would lose term positions, plus
+    // needing to copy the document.
+    for (let offset = 0; offset &lt; docLength; offset++) {
+      char = doc[offset];
 
-    // Copy it, so that we don't risk modifying the original on someone.
-    let cleaned = doc.toString().slice();
+      // Check if it's a non-whitespace character.
+      if (!this.splitOn.test(char)) {
+        // Check to see if we have an active word offset.
+        if (wordOffset === null) {
+          // We don't have an active word. Store the offset.
+          wordOffset = offset;
+        }
 
-    cleaned = cleaned.toLowerCase();
-    cleaned = cleaned.replaceAll(toStrip, '');
-    return cleaned.split(splitOn);
+        // Then append the character &amp; move on.
+        currentWord += char;
+        continue;
+      }
+
+      // It's a whitespace character.
+      // We now need to figure out if we have an in-progress term...
+      if (currentWord.length > 0) {
+        this.appendTerm(terms, currentWord, wordOffset);
+
+        // Reset our variables.
+        currentWord = "";
+        wordOffset = null;
+        // All done, next character please!
+        continue;
+      }
+    }
+
+    // If we didn't hit trailing whitespace, we need to finalize the last term.
+    if (currentWord.length > 0) {
+      this.appendTerm(terms, currentWord, wordOffset);
+    }
+
+    return terms;
   }
 }
 
@@ -106,11 +219,11 @@ class NGramTokenizer {
 }
 
 /**
- * A mini search engine.
+ * A tiny search engine.
  *
  * Usage:
  *
- *   const engine = new MiniSearch();
+ *   const engine = new SearchEngine();
  *
  *   // Add some documents. Call for each document you need to index.
  *   engine.add(uniqueDocumentId, documentText);
@@ -118,23 +231,24 @@ class NGramTokenizer {
  *   // Later, you can let the user search &amp; return the first 10 results.
  *   const results = engine.search(userQuery, 10);
  */
-class MiniSearch {
+class SearchEngine {
   /**
    * Creates a new search engine.
    * @param {object} existingIndex - The existing index or `undefined` (fresh
    *   index).
    * @param {object} preprocessor - The preprocessor or `undefined`
-   *   (`BasicEnglishPreprocessor`).
+   *   (`BasicPreprocessor`).
    * @param {object} tokenizer - The tokenizer or `undefined`
    *   (`NGramTokenizer`).
    * @return {this}
    */
   constructor(existingIndex, preprocessor, tokenizer) {
     this.index = existingIndex || {
+      "version": VERSION,
       "documentIds": {},
       "terms": {},
     };
-    this.preprocessor = preprocessor || new BasicEnglishPreprocessor();
+    this.preprocessor = preprocessor || new BasicPreprocessor();
     this.tokenizer = tokenizer || new NGramTokenizer();
   }
 
@@ -144,6 +258,7 @@ class MiniSearch {
    */
   clear() {
     this.index = {
+      "version": VERSION,
       "documentIds": {},
       "terms": {},
     };
@@ -157,10 +272,10 @@ class MiniSearch {
    */
   add(docId, doc) {
     const alreadyIndexed = this.index["documentIds"].hasOwnProperty(docId);
-    const words = this.preprocessor.process(doc);
+    const terms = this.preprocessor.process(doc);
 
-    for (let word of words) {
-      let tokens = this.tokenizer.tokenize(word);
+    for (let termPos of terms) {
+      let tokens = this.tokenizer.tokenize(termPos.term);
 
       for (let token of tokens) {
         // Check if the token is already present. If not, set to an empty object.
@@ -174,11 +289,11 @@ class MiniSearch {
           (!this.index["terms"][token].hasOwnProperty(docId))
           || (alreadyIndexed)
         ) {
-          this.index["terms"][token][docId] = 0;
+          this.index["terms"][token][docId] = [];
         }
 
-        // Increment the token count for the document.
-        this.index["terms"][token][docId]++;
+        // Store the term position of the token.
+        this.index["terms"][token][docId].push(termPos.position);
       }
     }
 
@@ -223,15 +338,15 @@ class MiniSearch {
   _search(query) {
     const initialResults = {};
     const rawResults = [];
-    const queryWords = this.preprocessor.process(query);
+    const queryTerms = this.preprocessor.process(query);
 
-    for (let word of queryWords) {
-      const queryTokens = this.tokenizer.tokenize(word);
+    for (let termPos of queryTerms) {
+      const queryTokens = this.tokenizer.tokenize(termPos.term);
 
       for (let token of queryTokens) {
         if (this.index["terms"].hasOwnProperty(token)) {
           // We've got a hit!
-          for (const [docId, count] of Object.entries(this.index["terms"][token])) {
+          for (const [docId, positions] of Object.entries(this.index["terms"][token])) {
             // Check if we've already seen the document. Initialize a result
             // if not.
             if (!initialResults.hasOwnProperty(docId)) {
@@ -246,7 +361,8 @@ class MiniSearch {
               initialResults[docId]["terms"][token] = 0;
             }
 
-            initialResults[docId]["terms"][token] += count;
+            // FIXME: We're still using a count here, when we can do better.
+            initialResults[docId]["terms"][token] += positions.length;
           }
         }
       }
@@ -330,15 +446,31 @@ class MiniSearch {
    * @return {undefined}
    */
   fromJson(indexData) {
+    const loadedData = JSON.parse(indexData);
+
+    if (!loadedData.hasOwnProperty("version")) {
+      throw new Error("Index data has no version information! Aborting load.");
+    }
+
+    // Do a basic version check.
+    const ourVersion = VERSION.split(".", 1).toString();
+    const loadedVersion = loadedData["version"].split(".", 1).toString();
+
+    if (ourVersion !== loadedVersion) {
+      throw new Error("Index major version doesn't match! Aborting load.");
+    }
+
     this.clear();
-    this.index = JSON.parse(indexData);
+    this.index = loadedData;
   }
 }
 
 export {
-  BasicEnglishPreprocessor,
+  VERSION,
+  TermPosition,
+  BasicPreprocessor,
   NGramTokenizer,
-  MiniSearch,
+  SearchEngine,
 };
 </code></pre>
         </article>
@@ -350,13 +482,13 @@ export {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-minisearch.html">minisearch</a></li></ul><h3>Classes</h3><ul><li><a href="module-minisearch-BasicEnglishPreprocessor.html">BasicEnglishPreprocessor</a></li><li><a href="module-minisearch-MiniSearch.html">MiniSearch</a></li><li><a href="module-minisearch-NGramTokenizer.html">NGramTokenizer</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-nanosearch.html">nanosearch</a></li></ul><h3>Classes</h3><ul><li><a href="module-nanosearch-BasicPreprocessor.html">BasicPreprocessor</a></li><li><a href="module-nanosearch-NGramTokenizer.html">NGramTokenizer</a></li><li><a href="module-nanosearch-SearchEngine.html">SearchEngine</a></li><li><a href="module-nanosearch-TermPosition.html">TermPosition</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Tue Jul 26 2022 07:47:56 GMT-0500 (Central Daylight Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Mon Aug 08 2022 20:07:42 GMT-0500 (Central Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>
