@@ -1,9 +1,9 @@
 /**
- * minisearch: A tiny search engine.
+ * nanosearch: A tiny search engine.
  *
  * Default implementation is based off of n-grams (default size: `3`).
  *
- * @module minisearch
+ * @module nanosearch
  */
 
 const VERSION = "1.0.0";
@@ -191,11 +191,11 @@ class NGramTokenizer {
 }
 
 /**
- * A mini search engine.
+ * A tiny search engine.
  *
  * Usage:
  *
- *   const engine = new MiniSearch();
+ *   const engine = new SearchEngine();
  *
  *   // Add some documents. Call for each document you need to index.
  *   engine.add(uniqueDocumentId, documentText);
@@ -203,7 +203,7 @@ class NGramTokenizer {
  *   // Later, you can let the user search & return the first 10 results.
  *   const results = engine.search(userQuery, 10);
  */
-class MiniSearch {
+class SearchEngine {
   /**
    * Creates a new search engine.
    * @param {object} existingIndex - The existing index or `undefined` (fresh
@@ -442,5 +442,5 @@ export {
   TermPosition,
   BasicPreprocessor,
   NGramTokenizer,
-  MiniSearch,
+  SearchEngine,
 };

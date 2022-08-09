@@ -1,17 +1,17 @@
-# `minisearch`
+# `nanosearch`
 
 A tiny search engine.
 
-Suitable for in-browser use, this provides n-gram based, English search results.
+Suitable for in-browser use, this provides n-gram based search results.
 
 
 ## Quickstart
 
 ```js
-import { MiniSearch } from '@toastdriven/minisearch';
+import { SearchEngine } from '@toastdriven/nanosearch';
 
 // Create a search engine.
-const engine = new MiniSearch();
+const engine = new SearchEngine();
 
 // Index some documents.
 // First parameter is the unique document ID, second is the document text.
@@ -31,7 +31,7 @@ engine.search("dogs", 10, 2);
 
 ## Installation
 
-`$ npm install @toastdriven/minisearch`
+`$ npm install @toastdriven/nanosearch`
 
 
 ## Requirements
@@ -42,8 +42,8 @@ engine.search("dogs", 10, 2);
 ## Tests
 
 ```shell
-$ git clone git@github.com:toastdriven/minisearch.git
-$ cd minisearch
+$ git clone git@github.com:toastdriven/nanosearch.git
+$ cd nanosearch
 $ npm install
 $ npm test
 ```
@@ -52,8 +52,8 @@ $ npm test
 ## Docs
 
 ```shell
-$ git clone git@github.com:toastdriven/minisearch.git
-$ cd minisearch
+$ git clone git@github.com:toastdriven/nanosearch.git
+$ cd nanosearch
 $ npm install
 $ ./node_modules/.bin/jsdoc -r -d ~/Desktop/out --package package.json --readme README.md src
 ```

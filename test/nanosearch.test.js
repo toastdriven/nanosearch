@@ -5,7 +5,7 @@ import {
   TermPosition,
   BasicPreprocessor,
   NGramTokenizer,
-  MiniSearch,
+  SearchEngine,
 } from "../src/index.js";
 
 describe("BasicEnglishPreprocessor", function () {
@@ -164,10 +164,10 @@ describe("NGramTokenizer", function () {
   });
 });
 
-describe("MiniSearch", function () {
+describe("SearchEngine", function () {
   describe("constructor", function () {
     it("sets internal state", function () {
-      const engine = new MiniSearch();
+      const engine = new SearchEngine();
 
       assert.deepEqual(engine.index, {
         "documentIds": {},
@@ -179,7 +179,7 @@ describe("MiniSearch", function () {
 
   describe("add", function () {
     it("correctly adds a document", function () {
-      const engine = new MiniSearch();
+      const engine = new SearchEngine();
 
       engine.add("abc", "The dogs are loose");
 
@@ -190,7 +190,7 @@ describe("MiniSearch", function () {
 
   describe("clear", function () {
     it("correctly empties the index", function () {
-      const engine = new MiniSearch();
+      const engine = new SearchEngine();
 
       engine.add("abc", "The dogs are loose");
       engine.add("def", "No cats aren't");
@@ -207,7 +207,7 @@ describe("MiniSearch", function () {
 
   describe("remove", function () {
     it("correctly removes a document", function () {
-      const engine = new MiniSearch();
+      const engine = new SearchEngine();
 
       engine.add("abc", "The dogs are loose");
       engine.add("def", "No cats aren't");
@@ -224,7 +224,7 @@ describe("MiniSearch", function () {
 
   describe("search", function () {
     it("searches against the index", function () {
-      const engine = new MiniSearch();
+      const engine = new SearchEngine();
 
       engine.add("abc", "The dog is a 'hot dog'.");
       engine.add("def", "Dogs > Cats");
@@ -242,7 +242,7 @@ describe("MiniSearch", function () {
 
   describe("toJson", function () {
     it("stores to JSON", function () {
-      const engine = new MiniSearch();
+      const engine = new SearchEngine();
 
       engine.add("abc", "The dog is a 'hot dog'.");
       engine.add("def", "Dogs > Cats");
@@ -259,7 +259,7 @@ describe("MiniSearch", function () {
 
   describe("fromJson", function () {
     it("loads from JSON", function () {
-      const engine = new MiniSearch();
+      const engine = new SearchEngine();
 
       // Sanity check.
       assert.equal(Object.keys(engine.index["documentIds"]).length, 0);
