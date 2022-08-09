@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Test MiniSearch</title>
+        <title>Test NanoSearch</title>
         <script type="text/javascript">
             window.addEventListener("load", (ev) => {
                 import('./src/index.js')
                     .then((module) => {
-                        window.engine = engine = new module.MiniSearch();
+                        window.engine = engine = new module.SearchEngine();
 
                         engine.add("abc", "The dog is a 'hot dog'.");
                         engine.add("def", "Dogs > Cats");
@@ -25,7 +25,7 @@
     </head>
 
     <body>
-        <h1>Test Mini Search</h1>
+        <h1>Test NanoSearch</h1>
 
         <ol>
             <li>
@@ -39,7 +39,7 @@
                 Open the Javascript console.
             </li>
             <li>
-                The engine has a small index built & is available
+                The search engine has a small index built & is available
                 via <code>`window.engine`</code>.
             </li>
         </ul>
