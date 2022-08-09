@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Benchmark NanoSearch</title>
+        <!-- <script type="application/json" id="complete-plays" src="./complete_shakespeare.json"></script> -->
+        <script type="text/javascript">
+            window.addEventListener("load", (ev) => {
+                const run = document.getElementById("run-bench");
+                const output = document.getElementById("bench-output");
+                // const works = JSON.parse(document.getElementById("complete-plays").textContent);
+
+                function log(msg) {
+                    output.textContent = `${output.textContent}\n${msg}`;
+                }
+
+                function bench(engine, works) {
+                    engine.clear();
+
+                    log("Starting benchmark...");
+                    log("Indexing...");
+                    const indexStart = new Date();
+
+                    for (const [docId, doc] of Object.entries(works)) {
+                        engine.add(docId, doc);
+                    }
+
+                    const indexEnd = new Date();
+                    log(`Done indexing ${Object.keys(works).length} documents.`);
+                    log(`Elapsed: ${(indexEnd - indexStart) / 1000}`);
+
+                    log("\n");
+
+                    log("Searching...");
+                    const searchStart = new Date();
+                    const queries = [
+                        "what light",
+                        "romeo",
+                        "hamlet",
+                        "denmark",
+                        "the fool",
+                        "whether tis nobler to suffer",
+                        "shepherdess",
+                    ]
+
+                    for (const query of queries) {
+                        log(`Searching on "${query}"...`);
+                        const results = engine.search(query);
+                        log(`Found ${results.length} results.`);
+                        log(`Top 3 Results: ${results.slice(0, 3).map((result) => result.docId).join(", ")}`);
+                    }
+
+                    const searchEnd = new Date();
+                    log(`Done searching.`);
+                    log(`Elapsed: ${(searchEnd - searchStart) / 1000}`);
+
+                    log("\n");
+
+                    log(`Total terms: ${Object.keys(engine.index.terms).length }`);
+                    const aTerms = Object.keys(engine.index.terms).filter((ngram) => ngram.startsWith("a"));
+                    log(`Total terms starting with "a": ${aTerms.length}`);
+                    log(`First 10 "a" terms: ${aTerms.slice(0, 10).join(", ")}`);
+                    const index = engine.toJson();
+                    const sizeInMb = parseInt((index.length / 1024 / 1024) * 10) / 10;
+                    log(`Index size (as JSON): ${sizeInMb} Mb`);
+                }
+
+                run.addEventListener("click", function (ev) {
+                    ev.preventDefault();
+
+                    import('../src/index.js')
+                        .then((module) => {
+                            fetch("./complete_shakespeare.json")
+                                .then((resp) => {
+                                    return resp.json();
+                                })
+                                .then((works) => {
+                                    window.engine = engine = new module.SearchEngine();
+                                    bench(engine, works);
+                                });
+                        });
+                });
+            });
+        </script>
+    </head>
+
+    <body>
+        <h1>Benchmark NanoSearch</h1>
+
+        <ol>
+            <li>
+                Run `python3 -m http.server 8888` in the <strong>parent</strong> directory.
+            </li>
+            <li>
+                Open <a href="http://localhost:8888/benchmark/benchmark.html">http://localhost:8888/benchmark/benchmark.html</a>
+                in your browser.
+            </li>
+            <li>
+                Click <a href="#" id="run-bench">here</a> to start the benchmark.
+            </li>
+        </ul>
+
+        <textarea id="bench-output" cols="80" rows="25"></textarea>
+    </body>
+</html>
