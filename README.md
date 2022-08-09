@@ -21,11 +21,25 @@ engine.add("ghi", "the quick brown fox jumps over the lazy dog");
 engine.add("jkl", "Am I lazy, or just work smart?");
 
 // Then, you can let the user search on the engine...
-engine.search("my dog");
+let myDogResults = engine.search("my dog");
+myDogResults.count(); // 3
+
+for(let res of myDogResults.iterator()) {
+  console.log(res.docId); // ex: "def"
+  console.log(res.score); // ex: 0.2727272727272727
+}
+
 // ...including limiting results (to just one)...
-engine.search("lazy", 1);
-// ...or a second page of ten results!
-engine.search("dogs", 10, 2);
+let lazyResults = engine.search("lazy");
+let topResult = lazyResults.at(0);
+console.log(topResult);
+
+// ...or making pages of ten results!
+let dogResults = engine.search("dogs");
+let pageOne = dogResults.slice(0, 10);
+let pageTwo = dogResults.slice(10, 20);
+console.log(pageOne);
+console.log(pageTwo);
 ```
 
 

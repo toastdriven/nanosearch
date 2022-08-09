@@ -231,12 +231,43 @@ describe("SearchEngine", function () {
       engine.add("ghi", "the quick brown fox jumps over the lazy dog");
       engine.add("jkl", "Am I lazy, or just work smart?");
 
-      const results = engine.search("my dog");
+      let results = engine.search("my dog");
+      assert.equal(results.count(), 3);
 
-      assert.equal(results.length, 3);
-      assert.equal(results[0]["docId"], "def");
-      assert.equal(results[1]["docId"], "abc");
-      assert.equal(results[2]["docId"], "ghi");
+      let iter = results.iterator();
+      let res = iter.next();
+      assert.equal(res.value.docId, "def");
+      assert.equal((res.value.score > 0) && (res.value.score < 1), true);
+      assert.equal(res.done, false);
+
+      res = iter.next();
+      assert.equal(res.value.docId, "abc");
+      assert.equal((res.value.score > 0) && (res.value.score < 1), true);
+      assert.equal(res.done, false);
+
+      res = iter.next();
+      assert.equal(res.value.docId, "ghi");
+      assert.equal((res.value.score > 0) && (res.value.score < 1), true);
+      assert.equal(res.done, false);
+
+      res = iter.next();
+      assert.equal(res.done, true);
+
+      results = engine.search("lazy");
+      let topResult = results.at(0);
+      assert.equal(topResult.docId, "jkl");
+
+      results = engine.search("dogs");
+      let pageOne = results.slice(0, 10);
+      let pageTwo = results.slice(10, 20);
+
+      assert.equal(pageOne.length, 3);
+      assert.equal(pageOne[0].docId, "def");
+      assert.equal(pageOne[1].docId, "abc");
+      assert.equal(pageOne[2].docId, "ghi");
+
+      // There is no page two.
+      assert.equal(pageTwo.length, 0);
     });
   });
 
@@ -283,7 +314,7 @@ describe("SearchEngine", function () {
 
       // Sanity check.
       const results = engine.search("dog");
-      assert.equal(results.length, 1);
+      assert.equal(results.count(), 1);
     });
   });
 });

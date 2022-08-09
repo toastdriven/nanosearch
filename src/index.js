@@ -26,6 +26,74 @@ class TermPosition {
   }
 }
 
+function* _resultsIterator(results, start = 0, end = Infinity, step = 1) {
+  let iterationCount = 0;
+  let actualEnd = Math.min(results.length, end);
+
+  for (let i = start; i < actualEnd; i += step) {
+    iterationCount++;
+    yield results.at(i);
+  }
+
+  return iterationCount;
+}
+
+/**
+ * A result set.
+ *
+ * An object that makes working with all the results from a query easier.
+ */
+class Results {
+  /**
+   * Creates a new result.
+   * @param {string} query - The query searched on.
+   * @param {array} results - The results found from searching.
+   * @return {this}
+   */
+  constructor(query, results) {
+    this.query = query;
+    this._allResults = results || [];
+  }
+
+  /**
+   * Creates an iterator that allows you to loop over results.
+   * @param {int} start - The starting offset. Default is `0`.
+   * @param {int} end - The ending offset. Default is `Infinity`.
+   * @param {int} step - The step value. Default is `1`.
+   * @return {generator}
+   */
+  iterator(start = 0, end = Infinity, step = 1) {
+    return _resultsIterator(this._allResults, start, end, step);
+  }
+
+  /**
+   * Returns a result at a specific offset.
+   * @param {int} offset - The position within the results.
+   * @return {this}
+   */
+  at(offset) {
+    return this._allResults.at(offset);
+  }
+
+  /**
+   * Returns the total count of matches.
+   * @return {int}
+   */
+  count() {
+    return this._allResults.length;
+  }
+
+  /**
+   * Slices the result set.
+   * @param {int} start - The starting offset.
+   * @param {int} end - The ending offset (exclusive).
+   * @return {array}
+   */
+  slice(start, end) {
+    return this._allResults.slice(start, end);
+  }
+}
+
 /**
  * A basic preprocessor.
  *
@@ -376,14 +444,9 @@ class SearchEngine {
   /**
    * Performs a search against the index & returns results.
    * @param {string} query - The user's query to search on.
-   * @param {int} limit - The number of results to return.
-   * @param {int} start - The starting offset of the results.
-   * @return {array}
+   * @return {Results}
    */
-  search(query, limit, start) {
-    limit = parseInt(limit) || 10;
-    start = parseInt(start) || 0;
-
+  search(query) {
     const allResults = this._search(query);
 
     // Reorder all the results by score.
@@ -397,7 +460,7 @@ class SearchEngine {
       return 0;
     });
 
-    return allResults.slice(start, start + limit);
+    return new Results(query, allResults);
   }
 
   /**
