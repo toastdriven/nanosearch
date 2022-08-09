@@ -37,6 +37,16 @@ class TermPosition {
  * - splits on whitespace
  */
 class BasicPreprocessor {
+  /**
+   * Creates a new basic preprocessor.
+   * @param {RegExp} splitOn - What to split terms on. Default is any
+   *   whitespace.
+   * @param {array} stopWords - A list of common words to be skipped. Default is
+   *   `[]`.
+   * @param {RegExp} punctuation - Any punctuation to be removed. Default is all
+   *   common symbols on an English QWERTY keyboard.
+   * @return {this}
+   */
   constructor(splitOn, stopWords, punctuation) {
     this.splitOn = splitOn || /\s/;
     this.stopWords = stopWords || [];
@@ -415,8 +425,8 @@ class MiniSearch {
     }
 
     // Do a basic version check.
-    const ourVersion = VERSION.split(".", 1);
-    const loadedVersion = loadedData["version"].split(".", 1);
+    const ourVersion = VERSION.split(".", 1).toString();
+    const loadedVersion = loadedData["version"].split(".", 1).toString();
 
     if (ourVersion !== loadedVersion) {
       throw new Error("Index major version doesn't match! Aborting load.");
