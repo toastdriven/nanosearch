@@ -425,8 +425,8 @@ class MiniSearch {
     }
 
     // Do a basic version check.
-    const ourVersion = VERSION.split(".", 1);
-    const loadedVersion = loadedData["version"].split(".", 1);
+    const ourVersion = VERSION.split(".", 1).toString();
+    const loadedVersion = loadedData["version"].split(".", 1).toString();
 
     if (ourVersion !== loadedVersion) {
       throw new Error("Index major version doesn't match! Aborting load.");
