@@ -4,11 +4,12 @@ import {
   VERSION,
   TermPosition,
   BasicPreprocessor,
+  EnglishPreprocessor,
   NGramTokenizer,
   SearchEngine,
 } from "../src/index.js";
 
-describe("BasicEnglishPreprocessor", function () {
+describe("BasicPreprocessor", function () {
   describe("default processing", function () {
     it("properly cleans a phrase of symbols", function () {
       const pp = new BasicPreprocessor();
@@ -123,6 +124,23 @@ describe("BasicEnglishPreprocessor", function () {
       assert.equal(terms[4].position, 16);
       assert.equal(terms[5].term, "dog'");
       assert.equal(terms[5].position, 21);
+    });
+  });
+});
+
+describe("EnglishPreprocessor", function () {
+  describe("default processing", function () {
+    it("avoids default stop words", function () {
+      const pp = new EnglishPreprocessor();
+      const doc = "Our dog is a very good boy, but he isn't much of a swimmer.";
+
+      const terms = pp.process(doc);
+      assert.equal(terms.length, 5);
+      assert.equal(terms[0].term, "dog");
+      assert.equal(terms[1].term, "good");
+      assert.equal(terms[2].term, "boy");
+      assert.equal(terms[3].term, "much");
+      assert.equal(terms[4].term, "swimmer");
     });
   });
 });
@@ -297,7 +315,7 @@ describe("SearchEngine", function () {
       assert.equal(Object.keys(engine.index["terms"]).length, 0);
 
       const rawData = {
-        "version": "1.0.0",
+        "version": VERSION,
         "documentIds": ["abc"],
         "terms": {
           "dog": {
