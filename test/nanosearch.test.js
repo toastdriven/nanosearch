@@ -6,6 +6,7 @@ import {
   BasicPreprocessor,
   EnglishPreprocessor,
   NGramTokenizer,
+  RegExpTokenizer,
   SearchEngine,
 } from "../src/index.js";
 
@@ -178,6 +179,22 @@ describe("NGramTokenizer", function () {
         "on",
         "ne",
       ]);
+    });
+  });
+});
+
+describe("RegExpTokenizer", function () {
+  describe("default processing", function () {
+    it("returns the correct tokens", function () {
+      const re = new RegExpTokenizer();
+
+      assert.deepEqual(re.tokenize("thinking"), ["think"]);
+      assert.deepEqual(re.tokenize("thinks"), ["think"]);
+      assert.deepEqual(re.tokenize("processed"), ["process"]);
+      assert.deepEqual(re.tokenize("processes"), ["process"]);
+      assert.deepEqual(re.tokenize("processable"), ["process"]);
+      // This would be too short without the suffix, so we get the whole word.
+      assert.deepEqual(re.tokenize("doing"), ["doing"]);
     });
   });
 });
