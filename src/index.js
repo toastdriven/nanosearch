@@ -386,6 +386,44 @@ class NGramTokenizer {
 }
 
 /**
+ * An regular expression tokenizer.
+ *
+ * Takes a word & generates a list of tokens to index.
+ */
+class RegExpTokenizer {
+  /**
+   * Creates a new tokenizer.
+   * @param {RegExp} regexp - The regular expression to replace on. Default is
+   *   `/(es|ed|ing|s|able)$/g`.
+   * @param {int} minLength - The minimum resultant word length. Default is `4`.
+   * @return {this}
+   */
+  constructor(regexp, minLength) {
+    this.regexp = regexp || /(es|ed|ing|s|able)$/g;
+    this.minLength = minLength || 4;
+  }
+
+  /**
+   * Processes a word into a list of tokens.
+   * @param {string} word - The word to process.
+   * @return {array}
+   */
+  tokenize(word) {
+    const tokens = [];
+    const stemmed = word.replace(this.regexp, '');
+
+    if (stemmed.length >= this.minLength) {
+      tokens.push(stemmed);
+    } else {
+      // It's too short to be a useful stem. Use the original word instead.
+      tokens.push(word);
+    }
+
+    return tokens;
+  }
+}
+
+/**
  * A tiny search engine.
  *
  * Usage:
@@ -634,5 +672,6 @@ export {
   BasicPreprocessor,
   EnglishPreprocessor,
   NGramTokenizer,
+  RegExpTokenizer,
   SearchEngine,
 };
