@@ -8,6 +8,103 @@
 
 const VERSION = "2.0.0-dev";
 
+const ENGLISH_STOP_WORDS = [
+  "a",
+  "all",
+  "am",
+  "an",
+  "and",
+  "any",
+  "are",
+  "at",
+  "be",
+  "been",
+  "being",
+  "both",
+  "but",
+  "by",
+  "can",
+  "can't",
+  "did",
+  "didn't",
+  "does",
+  "doesn't",
+  "doing",
+  "done",
+  "down",
+  "each",
+  "few",
+  "for",
+  "had",
+  "has",
+  "have",
+  "he",
+  "her",
+  "here",
+  "herself",
+  "him",
+  "himself",
+  "how",
+  "i",
+  "if",
+  "in",
+  "into",
+  "is",
+  "isn't",
+  "it",
+  "its",
+  "itself",
+  "many",
+  "me",
+  "more",
+  "most",
+  "my",
+  "no",
+  "nor",
+  "not",
+  "now",
+  "of",
+  "off",
+  "on",
+  "once",
+  "only",
+  "or",
+  "other",
+  "our",
+  "out",
+  "own",
+  "same",
+  "should",
+  "shouldn't",
+  "so",
+  "some",
+  "than",
+  "that",
+  "the",
+  "these",
+  "their",
+  "theirs",
+  "them",
+  "themselves",
+  "then",
+  "they",
+  "this",
+  "those",
+  "to",
+  "too",
+  "up",
+  "very",
+  "we",
+  "what",
+  "when",
+  "where",
+  "which",
+  "who",
+  "whom",
+  "why",
+  "you",
+];
+
 /**
  * A term position.
  *
@@ -119,6 +216,12 @@ class BasicPreprocessor {
     this.splitOn = splitOn || /\s/;
     this.stopWords = stopWords || [];
     this.punctuation = punctuation || /[~`!@#$%^&*\(\)_+=\[\]\{\}\\\|;:'",\.\/<>?-]/g;
+
+    this.setup();
+  }
+
+  setup() {
+    this.stopWords = this.stopWords.map((word) => this.clean(word));
   }
 
   /**
@@ -218,6 +321,30 @@ class BasicPreprocessor {
     }
 
     return terms;
+  }
+}
+
+/**
+ * A English-specific preprocessor.
+ *
+ * In addition to everything the `BasicPreprocessor` does, this has a default
+ * set of stop words suitable for the English language, which filters out
+ * common terms.
+ */
+class EnglishPreprocessor extends BasicPreprocessor {
+  /**
+   * Creates a new English preprocessor.
+   * @param {RegExp} splitOn - What to split terms on. Default is any
+   *   whitespace.
+   * @param {array} stopWords - A list of common words to be skipped. Default is
+   *   `ENGLISH_STOP_WORDS`.
+   * @param {RegExp} punctuation - Any punctuation to be removed. Default is all
+   *   common symbols on an English QWERTY keyboard.
+   * @return {this}
+   */
+  constructor(splitOn, stopWords, punctuation) {
+    stopWords = stopWords || ENGLISH_STOP_WORDS;
+    super(splitOn, stopWords, punctuation);
   }
 }
 
@@ -502,8 +629,10 @@ class SearchEngine {
 
 export {
   VERSION,
+  ENGLISH_STOP_WORDS,
   TermPosition,
   BasicPreprocessor,
+  EnglishPreprocessor,
   NGramTokenizer,
   SearchEngine,
 };
