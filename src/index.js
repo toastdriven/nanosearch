@@ -424,6 +424,147 @@ class RegExpTokenizer {
 }
 
 /**
+ * A Snowball tokenizer.
+ *
+ * Takes a word & generates a list of tokens to index. Specifically, this is an
+ * implementation of the Snowball (or Porter2) algorithm for stemming. See
+ * http://snowball.tartarus.org/algorithms/english/stemmer.html for details.
+ */
+class SnowballTokenizer {
+  /**
+   * Creates a new tokenizer.
+   * @param {RegExp} regexp - The regular expression to replace on. Default is
+   *   `/(es|ed|ing|s|able)$/g`.
+   * @param {int} minLength - The minimum resultant word length. Default is `4`.
+   * @return {this}
+   */
+  constructor() {
+    this.vowels = ["a", "e", "i", "o", "u", "y"];
+    this.doubles = ["bb", "dd", "ff", "gg", "mm", "nn", "pp", "rr", "tt"];
+    this.liEndings = ["c", "d", "e", "g", "h", "k", "m", "n", "r", "t"];
+    this.removeSuffixesRegexp = /('s'|'s|')$/g;
+  }
+
+  capitalizeYs(stemmed) {
+    if (stemmed.startsWith("y")) {
+      stemmed = `Y${stemmed.slice(1)}`;
+    }
+
+    for (let offset = 1; offset <= stemmed.length; offset++) {
+      if (stemmed.at(offset) !== "y") {
+        continue;
+      }
+
+      // We've got a `y`. Look for a preceding vowel.
+      const previousChar = stemmed.at(offset - 1);
+
+      if (this.vowels.indexOf(previousChar) >= 0) {
+        stemmed = `${stemmed.slice(0, offset - 1)}Y${stemmed.slice(offset + 1)}`;
+        // It's not clear from the algorithm description if we should only be
+        // doing this once (thus, `break;`), or for _all_ occurrences.
+      }
+    }
+
+    return stemmed;
+  }
+
+  findRegions(stemmed) {
+    const vowelPositions = [];
+
+    for (const vowel of this.vowels) {
+      const firstPos = stemmed.indexOf(vowel);
+
+      if (firstPos >= 0) {
+        vowelPositions.push(firstPos);
+      }
+    }
+
+    const earliestPos = Math.min(vowelPositions);
+    return {
+      'region1': stemmed.slice(0, earliestPos),
+      'region2': stemmed.slice(earliestPos),
+    };
+  }
+
+  removeSuffixes(stemmed) {
+    return stemmed.replace(this.removeSuffixesRegexp);
+  }
+
+  stepOne(stemmed, regions) {
+    // 1a
+
+    // 1b
+
+    // 1c
+    return stemmed;
+  }
+
+  stepTwo(stemmed, regions) {
+
+    return stemmed;
+  }
+
+  stepThree(stemmed, regions) {
+
+    return stemmed;
+  }
+
+  stepFour(stemmed, regions) {
+
+    return stemmed;
+  }
+
+  stepFive(stemmed, regions) {
+
+    return stemmed;
+  }
+
+  cleanUp(stemmed) {
+
+    return stemmed;
+  }
+
+  /**
+   * Processes a word into a list of tokens.
+   * @param {string} word - The word to process.
+   * @return {array}
+   */
+  tokenize(word) {
+    const tokens = [];
+    let stemmed = word.slice();
+
+    // Words <= 2 characters just get returned as-is.
+    if (stemmed.length <= 2) {
+      return [stemmed];
+    }
+
+    // Remove preceding single quotes, if present.
+    if (stemmed.startsWith("'")) {
+      stemmed = stemmed.slice(1);
+    }
+
+    stemmed = this.capitalizeYs(stemmed);
+    const regions = this.findRegions(stemmed);
+
+    // Step 0: Trim suffixes.
+    stemmed = this.removeSuffixes(stemmed);
+
+    // Step 1(a, b, & c)
+    stemmed = this.stepOne(stemmed, regions);
+
+    stemmed = this.stepTwo(stemmed, regions);
+    stemmed = this.stepThree(stemmed, regions);
+    stemmed = this.stepFour(stemmed, regions);
+    stemmed = this.stepFive(stemmed, regions);
+
+    stemmed = this.cleanUp(stemmed);
+
+    tokens.push(stemmed);
+    return tokens;
+  }
+}
+
+/**
  * A tiny search engine.
  *
  * Usage:
