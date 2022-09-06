@@ -27,6 +27,8 @@ changed. The `start` & `limit` parameters were dropped, but can be applied to
   stop words (common words to filter out that would otherwise dilute the
   search results). We also export the `ENGLISH_STOP_WORDS` constant for your
   use.
+* Added a `RegExpTokenizer`. This allows for stemming based on a regular
+  expression, which can be useful for simple or non-English situations.
 
 
 ## 1.0.0
